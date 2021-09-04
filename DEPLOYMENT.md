@@ -217,16 +217,16 @@ Clone the app to user directory
 ###### Assumptions:
 - You have deployed a WordPress application and the application is available at a public IP address, done [here](#setup).
 - You have the necessary credentials to log in to the Bitnami application instance, done [here](#setup).
-- You own a domain name `academy-ny.com`.
+- You own a domain name `academyux.com`.
 
 ###### Now:
 1. Login to your Domain name provider
-2. Forward your domain name, `academy-ny.com` , to the public IP of the ec2 instance, created [here](#setup)
-3. Create a subdomain name (usually an `A record`), `admin.academy-ny.com`, to the public IP of the ec2 instance.
+2. Forward your domain name, `academyux.com` , to the public IP of the ec2 instance, created [here](#setup)
+3. Create a subdomain name (usually an `A record`), `admin.academyux.com`, to the public IP of the ec2 instance.
 
 ###### Note:
 - Here `admin` is the name for sub-domain to access the WordPress backend
-- `academy-ny.com` would be landing page of the NextJS App
+- `academyux.com` would be landing page of the NextJS App
 
 
 ## Update WordPress home URLS
@@ -236,10 +236,10 @@ Clone the app to user directory
 	cd
 	vi /apps/wordpress/htdocs/wp-config.php
 	```
-- Update the `WP_SITEURL` and `WP_SITEURL` to reflect the newly created subdomain -> `admin.academy-ny.com`
+- Update the `WP_SITEURL` and `WP_SITEURL` to reflect the newly created subdomain -> `admin.academyux.com`
 	```php
-	define('WP_SITEURL', 'http://admin.academy-ny.com/');
-	define('WP_HOME', 'http://admin.academy-ny.com/');
+	define('WP_SITEURL', 'http://admin.academyux.com/');
+	define('WP_HOME', 'http://admin.academyux.com/');
 	```
 
 
@@ -248,8 +248,8 @@ Clone the app to user directory
 > Inspired from [here](https://docs.bitnami.com/huawei/how-to/generate-install-lets-encrypt-ssl/#introduction)
 
 > We'll need to create two certificates for:
-- **WordPress**, assuming is routed at `admin.academy-ny.com`
-- **NextApp**, assumong is routed at `academy-ny.com`
+- **WordPress**, assuming is routed at `admin.academyux.com`
+- **NextApp**, assumong is routed at `academyux.com`
 
 1. Install The Lego Client
 	- *The Lego client simplifies the process of Let's Encrypt certificate generate. To use it, follow these steps:*
@@ -270,19 +270,19 @@ Clone the app to user directory
 	```
 	- Request **two new certificates** for your domains as below. Remember to replace the **EMAIL-ADDRESS** placeholder with your email address.
 
-	- Run these commands, assuming generating certificates for ```admin.academy-ny.com``` and ```acadeny-ny.com```
+	- Run these commands, assuming generating certificates for ```admin.academyux.com``` and ```academyux.com```
 	```bash
-	sudo lego --email="EMAIL-ADDRESS" --domains="admin.academy-ny.com" --path="/etc/lego" run
+	sudo lego --email="EMAIL-ADDRESS" --domains="admin.academyux.com" --path="/etc/lego" run
 	```
 	- *After the client is done generating certificate for the domain above*
 	```bash
-	sudo lego --email="EMAIL-ADDRESS" --domains="academy-ny.com" --path="/etc/lego" run
+	sudo lego --email="EMAIL-ADDRESS" --domains="academyux.com" --path="/etc/lego" run
 	```
 	- Two set of certificates will now be generated in the /etc/lego/certificates directory. This set includes the server certificate file DOMAIN.crt and the server certificate key file DOMAIN.key.
 
 
 3. Configure The Web Server To Use The Let's Encrypt Certificate
-	- Assuming certificates were generated for ```admin.academy-ny.com``` and ```acadeny-ny.com```
+	- Assuming certificates were generated for ```admin.academyux.com``` and ```academyux.com```
 	- Link the new SSL certificate and certificate key file to the correct locations, depending on which Web server you're using. Update the file permissions to make them readable by the root user only.
 	```bash
 	sudo mv /opt/bitnami/apache2/conf/server.crt /opt/bitnami/apache2/conf/server.crt.old
@@ -295,6 +295,8 @@ Clone the app to user directory
 	sudo ln -s /etc/lego/certificates/academy-ny.com.crt /opt/bitnami/apache2/conf/server.crt
 	sudo ln -s /etc/lego/certificates/admin.academy-ny.com.key /opt/bitnami/apache2/conf/admin.server.key
 	sudo ln -s /etc/lego/certificates/admin.academy-ny.com.crt /opt/bitnami/apache2/conf/admin.server.crt
+	sudo ln -s /etc/lego/certificates/admin.academyux.com.key /opt/bitnami/apache2/conf/academy.server.key
+	sudo ln -s /etc/lego/certificates/admin.academyux.com.crt /opt/bitnami/apache2/conf/academy.server.crt
 	sudo chown root:root /opt/bitnami/apache2/conf/server*
 	sudo chmod 600 /opt/bitnami/apache2/conf/server*
 	```
@@ -310,10 +312,12 @@ Clone the app to user directory
 	```bash
 	#!/bin/bash
 	sudo /opt/bitnami/ctlscript.sh stop apache
-	sudo /usr/local/bin/lego --email="EMAIL-ADDRESS" --domains="admin.academy-ny.com" --path="/etc/lego" renew
-	sudo /usr/local/bin/lego --email="EMAIL-ADDRESS" --domains="academy-ny.com" --path="/etc/lego" renew
-	sudo /opt/bitnami/ctlscript.sh start apache
+  sudo /opt/bitnami/letsencrypt/lego --tls --email="adam.perlis@academyux.com" --domains="admin.academyux.com" --path="/etc/lego" renew --days 90
+	sudo /opt/bitnami/letsencrypt/lego --tls --email="adam.perlis@academyux.com" --domains="academyux.com" --path="/etc/lego" renew --days 90
+  sudo /opt/bitnami/ctlscript.sh start apache
 	```
+
+
 - Make the script executable:
 	```bash
 	chmod +x /etc/lego/renew-certificate.sh
@@ -327,6 +331,7 @@ Clone the app to user directory
 	```bash
 	0 0 1 * * /etc/lego/renew-certificate.sh 2> /dev/null
 	```
+
 
 
 ## Create Virtual Host
@@ -348,14 +353,14 @@ Using a Virtual Host allows you to access an application at (for example) `http:
 	- Add in these line
 	```apache
 	<VirtualHost *:80>
-	    ServerName admin.academy-ny.com
+	    ServerName admin.academyux.com
 	    DocumentRoot "/opt/bitnami/apps/wordpress/htdocs"
 
 	    Include "/opt/bitnami/apps/wordpress/conf/httpd-app.conf"
 	</VirtualHost>
 
 	<VirtualHost *:443>
-	    ServerName admin.academy-ny.com
+	    ServerName admin.academyux.com
 
 	    DocumentRoot "/opt/bitnami/apps/wordpress/htdocs"
 	    SSLEngine on
@@ -368,7 +373,7 @@ Using a Virtual Host allows you to access an application at (for example) `http:
 
 
 	<VirtualHost *:80>
-	   ServerName academy-ny.com
+	   ServerName academyux.com
 
 	   ProxyRequests Off
 	   ProxyPreserveHost On
@@ -389,7 +394,7 @@ Using a Virtual Host allows you to access an application at (for example) `http:
 
 	<VirtualHost *:443>
 
-	   ServerName academy-ny.com
+	   ServerName academyux.com
 	   ProxyRequests Off
 	   ProxyPreserveHost On
 	   ProxyVia Full
@@ -479,7 +484,7 @@ Follow [this first](#fetch-url-is-changed-in-env-configjs-but-isnt-updated-in-th
 	```
 - Rather than that it should be *here `username@gmail.com` should be replaced with your email-address*:
 	```bash
-	sudo lego --email="username@gmail.com" --domains="academy-ny.com" --path="/etc/lego" run
+	sudo lego --email="username@gmail.com" --domains="academyux.com" --path="/etc/lego" run
 	```
 
 
